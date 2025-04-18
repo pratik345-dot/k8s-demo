@@ -6,7 +6,7 @@ metadata:
   labels:
     app: user-service
   annotations:
-    kubernetes.io/change-cause: "Update the tag to 1.0.2"
+    kubernetes.io/change-cause: "Update the tag to 1.0.0"
 spec:
   replicas: 1
   selector:
@@ -19,8 +19,7 @@ spec:
     spec:
       containers:
       - name: user-service
-        image: pratikkumar54/user-service:1.0.0
-        # image: pratikkumar54/user-service:1.0.4
+        image: pratikkumar54/user-svc-demo:1.0.0
         ports:
         - containerPort: 3000
         resources:
