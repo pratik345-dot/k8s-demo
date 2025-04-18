@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo-statefulset
+  namespace: demo-app
+spec:
+  serviceName: mongo-headless-service
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mongo-pod
+  template:
+    metadata:
+      labels:
+        app: mongo-pod
+    spec:
+      containers:
+        - name: mongo-container
+          image: mongo
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - db.adminCommand('ping')
+            initialDelaySeconds: 5
+            periodSeconds: 3
+          ports:
+            - containerPort: 27017
+              name: mongo-port
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_USER
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_PASSWORD
+            - name: MONGO_INITDB_DATABASE
+              value: fans
+          command:
+            - 'mongod'
+            - '--replSet'
+            - 'rs0'
+            - '--bind_ip_all'
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-headless-service
+  namespace: demo-app
+spec:
+  selector:
+    app: mongo-pod
+  clusterIP: None
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: 27017
+
+
+# kubectl exec -it mongo-statefulset-0 mongo-container -- sh
+# mongosh
+
+# in pod1 -> 1-> mongosh 2-> use admin
+# db.dropUser("fansadmin")
+# db.createUser({
+#   user: "fansadmin",
+#   pwd: "fanssecret",
+#   roles: [
+#     { role: "readWrite", db: "fans" },
+#     { role: "dbAdmin", db: "fans" }
+#   ]
+# })
+
+# rs.initiate({
+#   _id: "rs0",
+#   members: [
+#     { _id: 0, host: "mongo-statefulset-0.mongo-headless-service.demo-app.svc.cluster.local:27017" },
+#     { _id: 1, host: "mongo-statefulset-1.mongo-headless-service.demo-app.svc.cluster.local:27017" },
+#   ]
+# })
+
+#rs.secondaryOk() in all other pods
+
+# uri ->>>> mongodb://mongo-statefulset-0.mongo-headless-service,mongo-statefulset-1.mongo-headless-service/?replicaSet=rs0&readPreference=secondaryPreferred
+#wget -qO- http://control-panel:5001/control-panel/health
+
+# https://schoolofdevops.github.io/ultimate-kubernetes-bootcamp/6-vote-kubernetes_deployment/
+
+# 1. first pod
+# use admin
+# rs.initiate({
+#   _id: "rs0",
+#   members: [
+#     { _id: 0, host: "mongo-statefulset-0.mongo-headless-service.demo-app.svc.cluster.local:27017" },
+#     { _id: 1, host: "mongo-statefulset-1.mongo-headless-service.demo-app.svc.cluster.local:27017" }
+#   ]
+# })
+
+# 2nd pod
+# rs.secondaryOk()
