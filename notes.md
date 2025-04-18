@@ -20,5 +20,6 @@ autocannon -c 500 -d 60 http://localhost:3005/hello
 
 curl -X POST http://localhost:3005/add -H "Content-Type: application/json" -d '{"name":"Alice"}'
 
+argocd admin dashboard -n argocd
 argocd login localhost:8080 --username admin --password $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
 

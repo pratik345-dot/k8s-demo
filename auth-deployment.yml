@@ -19,7 +19,8 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: pratikkumar54/auth-service:1.0.0
+        # image: pratikkumar54/auth-service:1.0.0
+        image: pratikkumar54/auth-service:1.0.1
         ports:
         - containerPort: 3001
         resources:
